@@ -6,6 +6,12 @@ import mlflow
 from pyspark.ml.feature import VectorAssembler
 
 CONNECTION_NAME = "ps-aw-dl"
+MODEL_NAME = "ElasticNetPowerPlant"
+
+MAX_ITER=100
+REG_PARAM=0.3
+ELASTIC_NET_PARAM=0.8
+
 conn = cmldata.get_connection(CONNECTION_NAME)
 spark = conn.get_spark_session()
 
@@ -26,16 +32,16 @@ test_df = splits[1]
 from pyspark.ml.regression import LinearRegression
 
 lr = LinearRegression(featuresCol = 'features', 
-                      labelCol='PE', maxIter=10, regParam=0.1, 
-                      elasticNetParam=0.99)
+                      labelCol='PE', maxIter=MAX_ITER, regParam=REG_PARAM, 
+                      elasticNetParam=ELASTIC_NET_PARAM)
 
-mlflow.set_experiment("Linear regression - spark")
+mlflow.set_experiment("Linear regression")
 
 with mlflow.start_run():
 
-  mlflow.log_param('maxIter',10)
-  mlflow.log_param('regParam',0.1)
-  mlflow.log_param('elasticNetParam',0.99)
+  mlflow.log_param('maxIter',MAX_ITER)
+  mlflow.log_param('regParam',REG_PARAM)
+  mlflow.log_param('elasticNetParam',ELASTIC_NET_PARAM)
 
 
   lr_model = lr.fit(train_df)
@@ -57,23 +63,6 @@ with mlflow.start_run():
   predictions.select("prediction","PE","features").show()
   mlflow.log_metric("RMSE", test_result.rootMeanSquaredError)
   mlflow.log_metric("r2", test_result.r2)
-
-  # Use Spark model.save() 
-  lr_model.write().overwrite().save("s3a://ps-uat2/data/mymodel")
+  mlflow.spark.log_model(lr_model, "model", registered_model_name=MODEL_NAME)
 
   
-# Test inference
-from pyspark.ml.regression import LinearRegressionModel
-from pyspark.ml.feature import VectorAssembler
-
-loaded_model = LinearRegressionModel.load("s3a://ps-uat2/data/mymodel")
-
-df = spark.read.json(spark.sparkContext.parallelize(['{"AP":2000,"AT":15,"RH":75,"V":40}']))
-
-vectorAssembler = VectorAssembler(inputCols = 
-                                    ['AT', 'V', 'AP', 'RH'], 
-                                    outputCol = 'features')
-
-
-df1 = vectorAssembler.transform(df)
-df1.toJSON().first()
