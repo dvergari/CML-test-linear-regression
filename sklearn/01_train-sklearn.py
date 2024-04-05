@@ -4,6 +4,8 @@ import pandas as pd
 dataset = pd.read_excel('data.xlsx')
 dataset.head()
 
+REG_MODEL_NAME = "ElasticNetPowerPlantSklearn"
+
 # Getting the inputs and output
 X = dataset.iloc[:, :-1].values
 X
@@ -52,4 +54,4 @@ with mlflow.start_run():
   n = X_test.shape[0]
   adj_r2 = 1-(1-r2)*(n-1)/(n-k-1)
   adj_r2
-  mlflow.sklearn.log_model(model, "model", registered_model_name="Sklearn Power Plant")
+  mlflow.sklearn.log_model(model, "model", registered_model_name=REG_MODEL_NAME)
