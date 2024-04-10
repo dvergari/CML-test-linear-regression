@@ -3,7 +3,8 @@ import pandas as pd
 from pyspark import SparkContext
 
 
-dataset = pd.read_excel('data.xlsx')
+
+dataset = pd.read_excel('../data.xlsx')
 dataset.head()
 
 # Needed because of https://github.com/YosefLab/Compass/issues/92

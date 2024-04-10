@@ -8,9 +8,9 @@ from pyspark.ml.feature import VectorAssembler
 CONNECTION_NAME = "ps-aw-dl"
 MODEL_NAME = "ElasticNetPowerPlant"
 
-MAX_ITER=100
-REG_PARAM=0.3
-ELASTIC_NET_PARAM=0.8
+MAX_ITER=300
+REG_PARAM=0.1
+ELASTIC_NET_PARAM=0.7
 
 conn = cmldata.get_connection(CONNECTION_NAME)
 spark = conn.get_spark_session()
@@ -63,6 +63,7 @@ with mlflow.start_run():
   predictions.select("prediction","PE","features").show()
   mlflow.log_metric("RMSE", test_result.rootMeanSquaredError)
   mlflow.log_metric("r2", test_result.r2)
-  mlflow.spark.log_model(lr_model, "model", registered_model_name=MODEL_NAME)
+  mlflow.spark.log_model(lr_model, artifact_path="artifacts")
+  #mlflow.spark.log_model(lr_model, "model", registered_model_name=MODEL_NAME)
 
   
